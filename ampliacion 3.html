@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Excel To SQL - Grupo EL LAGAR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Fuente Montserrat -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+    
+    .logo-hexagon {
+      width: 70px;
+      height: 70px;
+      position: relative;
+      margin: 0 auto;
+      transform: rotate(0deg);
+    }
+    
+    .hexagon-part {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    }
+    
+    .hex-red {
+      background: #E53E3E;
+      transform: rotate(0deg);
+      z-index: 3;
+      clip-path: polygon(50% 0%, 100% 25%, 50% 50%, 0% 25%);
+    }
+    
+    .hex-yellow {
+      background: #FBD34D;
+      transform: rotate(0deg);
+      z-index: 2;
+      clip-path: polygon(100% 25%, 100% 75%, 50% 50%);
+    }
+    
+    .hex-gray {
+      background: #9CA3AF;
+      transform: rotate(0deg);
+      z-index: 1;
+      clip-path: polygon(0% 25%, 50% 50%, 50% 100%, 0% 75%);
+    }
+    
+    .hex-light-gray {
+      background: #CBD5E0;
+      transform: rotate(0deg);
+      z-index: 1;
+      clip-path: polygon(50% 50%, 100% 75%, 50% 100%);
+    }
+    
+    .hex-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      background: white;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 4;
+    }
+    
+    .main-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 3rem;
+      color: #1a202c;
+      text-align: center;
+      margin: 3rem 0;
+      letter-spacing: 3px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .subtitle {
+      color: #718096;
+      text-align: center;
+      font-weight: 400;
+      margin-bottom: 3rem;
+    }
+    
+    .brand-text {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #1a202c;
+    }
+    
+    .brand-text .el {
+      color: #fbbf24;
+    }
+    
+    .brand-text .lagar {
+      color: #e53e3e;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
+    
+    .step-number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      margin-right: 12px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .step-title {
+      color: #2d3748;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .file-input {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      width: 100%;
+    }
+    
+    .file-input input[type=file] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .file-input-label {
+      display: block;
+      padding: 24px 16px;
+      border: 3px dashed #cbd5e0;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    
+    .file-input:hover .file-input-label {
+      border-color: #667eea;
+      background: #eef2ff;
+      transform: translateY(-1px);
+    }
+    
+    .generate-btn {
+      background: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
+      color: white;
+      padding: 16px 48px;
+      border-radius: 50px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .generate-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
+    
+    .download-btn {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+      margin-left: 1rem;
+    }
+    
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    }
+    
+    .text-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .text-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .sql-editor {
+      width: 100%;
+      padding: 24px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 16px;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 550px;
+      background: #f8fafc;
+    }
+    
+    .sql-editor:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="py-6">
+    <div class="max-w-4xl mx-auto px-4 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div class="logo-hexagon">
+          <div class="hexagon-part hex-red"></div>
+          <div class="hexagon-part hex-yellow"></div>
+          <div class="hexagon-part hex-gray"></div>
+          <div class="hexagon-part hex-light-gray"></div>
+          <div class="hex-center"></div>
+        </div>
+        <div class="brand-text">
+          GRUPO <span class="el">EL</span> <span class="lagar">LAGAR</span>
+        </div>
+      </div>
+      <div class="subtitle">
+        TODO EN UN MISMO LUGAR
+      </div>
+    </div>
+  </header>
+
+  <!-- Título principal -->
+  <div class="text-center mb-8">
+    <h1 class="main-title">EXCEL TO SQL CONVERTER</h1>
+  </div>
+
+  <!-- Contenedor principal -->
+  <main class="max-w-7xl mx-auto px-4 pb-8">
+
+    <!-- Paso 1: Cargar archivo Excel -->
+    <div class="card">
+      <h2 class="step-title">
+        <span class="step-number">1</span>
+        Cargar archivo Excel
+      </h2>
+      <div class="file-input">
+        <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        <label for="excelFile" class="file-input-label">
+          <div class="text-gray-600">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span id="fileStatus">Seleccionar archivo | Ningún archivo seleccionado</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Paso 2: Nombre de la tabla -->
+    <div class="card">
+      <h2 class="step-title">
+        <span class="step-number">2</span>
+        Nombre de la tabla
+      </h2>
+      <input type="text" id="tableName" placeholder="Ej: usuarios" class="text-input" />
+    </div>
+
+    <!-- Botón de generación -->
+    <div class="text-center mb-6">
+      <button id="sqlInsertBtn" class="generate-btn">
+        Generar SQL (Insert)
+      </button>
+      <button id="downloadBtn" class="download-btn hidden">
+        Descargar .sql
+      </button>
+    </div>
+
+    <!-- Paso 3: SQL Editor -->
+    <div class="card">
+      <h2 class="step-title">
+        <span class="step-number">3</span>
+        SQL Editor
+      </h2>
+      <textarea id="sqlQuery" class="sql-editor" placeholder="El código SQL generado aparecerá aquí..."></textarea>
+    </div>
+
+  </main>
+
+  <script>
+    const excelFileInput = document.getElementById('excelFile');
+    const fileStatus = document.getElementById('fileStatus');
+    const tableNameInput = document.getElementById('tableName');
+    const sqlInsertBtn = document.getElementById('sqlInsertBtn');
+    const sqlQueryTextarea = document.getElementById('sqlQuery');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let excelData = [];
+
+    // Leer Excel
+    excelFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) {
+        fileStatus.textContent = 'Seleccionar archivo | Ningún archivo seleccionado';
+        return;
+      }
+      
+      fileStatus.textContent = `Procesando: ${file.name}...`;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          excelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+          fileStatus.textContent = `✓ Archivo cargado: ${file.name} (${excelData.length} filas)`;
+          fileStatus.style.color = '#48bb78';
+        } catch (error) {
+          fileStatus.textContent = '✗ Error al procesar el archivo';
+          fileStatus.style.color = '#e53e3e';
+          console.error('Error:', error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Generar SQL
+    function generateSQLInsert(tableName, rows) {
+      if (!tableName) throw new Error("Debes ingresar un nombre de tabla.");
+      if (!rows.length) throw new Error("Debes cargar un archivo Excel.");
+      
+      let sql = `-- Datos generados desde Excel\n-- Tabla: ${tableName}\n-- Filas: ${rows.length}\n\n`;
+      
+      rows.forEach(row => {
+        const cols = Object.keys(row).map(col => `\`${col}\``).join(", ");
+        const vals = Object.values(row).map(v => {
+          if (v === null || v === undefined) return "NULL";
+          if (typeof v === 'number') return v;
+          return `'${String(v).replace(/'/g, "''")}'`;
+        }).join(", ");
+        sql += `INSERT INTO \`${tableName}\` (${cols}) VALUES (${vals});\n`;
+      });
+      
+      return sql;
+    }
+
+    sqlInsertBtn.addEventListener('click', () => {
+      try {
+        const sql = generateSQLInsert(tableNameInput.value.trim(), excelData);
+        sqlQueryTextarea.value = sql;
+        downloadBtn.classList.remove("hidden");
+        
+        // Animación de éxito
+        sqlInsertBtn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+        sqlInsertBtn.textContent = '✓ SQL Generado';
+        
+        setTimeout(() => {
+          sqlInsertBtn.style.background = 'linear-gradient(135deg, #4299e1 0%, #667eea 100%)';
+          sqlInsertBtn.textContent = 'Generar SQL (Insert)';
+        }, 2000);
+        
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Descargar archivo .sql
+    downloadBtn.addEventListener('click', () => {
+      const tableName = tableNameInput.value.trim() || 'consulta';
+      const blob = new Blob([sqlQueryTextarea.value], { type: "text/sql" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${tableName}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Validación en tiempo real del nombre de tabla
+    tableNameInput.addEventListener('input', (e) => {
+      const value = e.target.value;
+      // Remover caracteres no válidos para nombres de tabla SQL
+      const cleanValue = value.replace(/[^a-zA-Z0-9_]/g, '');
+      if (value !== cleanValue) {
+        e.target.value = cleanValue;
+      }
+    });
+  </script>
+</body>
+</html>
