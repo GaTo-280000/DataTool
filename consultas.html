@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Data Tool Box - Grupo EL LAGAR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sql-formatter@6.5.0/dist/sql-formatter.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background: #f0f2f5; min-height: 100vh; }
+    .logo-hexagon { width: 70px; height: 70px; position: relative; margin: 0 auto; transform: rotate(0deg);}
+    .hexagon-part { position: absolute; width: 100%; height: 100%; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+    .hex-red { background: #E53E3E; z-index: 3; clip-path: polygon(50% 0%, 100% 25%, 50% 50%, 0% 25%); }
+    .hex-yellow { background: #FBD34D; z-index: 2; clip-path: polygon(100% 25%, 100% 75%, 50% 50%); }
+    .hex-gray { background: #9CA3AF; z-index: 1; clip-path: polygon(0% 25%, 50% 50%, 50% 100%, 0% 75%); }
+    .hex-light-gray { background: #CBD5E0; z-index: 1; clip-path: polygon(50% 50%, 100% 75%, 50% 100%); }
+    .hex-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: white; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); z-index: 4; }
+
+    .main-title { font-weight: 700; font-size: 3rem; color: #1a202c; text-align: center; margin: 3rem 0; letter-spacing: 3px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .subtitle { color: #718096; text-align: center; font-weight: 400; margin-bottom: 3rem; }
+    .brand-text { font-weight: 700; font-size: 0.9rem; color: #1a202c; }
+    .brand-text .el { color: #fbbf24; } .brand-text .lagar { color: #e53e3e; }
+
+    .card { background: white; border-radius: 20px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); padding: 2.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12); }
+
+    .step-number { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; margin-right: 12px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .step-title { color: #2d3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; }
+
+    .file-input { position: relative; display: inline-block; cursor: pointer; width: 100%; }
+    .file-input input[type=file] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+    .file-input-label { display: block; padding: 24px 16px; border: 3px dashed #cbd5e0; border-radius: 16px; text-align: center; transition: all 0.3s ease; background: #f8fafc; cursor: pointer; }
+    .file-input:hover .file-input-label { border-color: #667eea; background: #eef2ff; transform: translateY(-1px); }
+
+    .generate-btn { background: linear-gradient(135deg, #4299e1 0%, #667eea 100%); color: white; padding: 16px 48px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+    .generate-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4); }
+
+    .download-btn { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 10px 24px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3); margin-left: 1rem; }
+    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4); }
+
+    .text-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: all 0.3s ease; }
+    .text-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+    .sql-editor { width: 100%; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 16px; line-height: 1.5; resize: vertical; min-height: 250px; background: #f8fafc; }
+    .sql-editor:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 2rem; cursor: pointer; justify-content: center; flex-wrap: wrap; }
+    .tab { padding: 12px 24px; border-radius: 12px; font-weight: 600; }
+    .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .tab-inactive { background: #e2e8f0; color: #2d3748; }
+    .tab:hover { opacity: 0.85; }
+    .tab-content { display: none; }
+    .tab-content-active { display: block; }
+
+    .formatter-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="py-6">
+    <div class="max-w-4xl mx-auto px-4 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div class="logo-hexagon">
+          <div class="hexagon-part hex-red"></div>
+          <div class="hexagon-part hex-yellow"></div>
+          <div class="hexagon-part hex-gray"></div>
+          <div class="hexagon-part hex-light-gray"></div>
+          <div class="hex-center"></div>
+        </div>
+        <div class="brand-text">
+          GRUPO <span class="el">EL</span> <span class="lagar">LAGAR</span>
+        </div>
+      </div>
+      <div class="subtitle">TODO EN UN MISMO LUGAR</div>
+    </div>
+  </header>
+
+  <!-- Título principal -->
+  <div class="text-center mb-8">
+    <h1 class="main-title">DATA TOOL BOX</h1>
+  </div>
+
+  <!-- Pestañas -->
+  <div class="tabs">
+    <div id="tabExcelSQL" class="tab tab-active">Excel → SQL</div>
+    <div id="tabSQLFormatter" class="tab tab-inactive">SQL Formatter</div>
+    <div id="tabSQLOptimizer" class="tab tab-inactive">Optimizador SQL</div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <main class="max-w-7xl mx-auto px-4 pb-8">
+
+    <!-- Contenido Excel → SQL -->
+    <div id="contentExcelSQL" class="tab-content tab-content-active">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Cargar archivo Excel</h2>
+        <div class="file-input">
+          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+          <label for="excelFile" class="file-input-label">
+            <div class="text-gray-600">
+              <span id="fileStatus">Seleccionar archivo | Ningún archivo seleccionado</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">2</span>Nombre de la tabla</h2>
+        <input type="text" id="tableName" placeholder="Ej: usuarios" class="text-input" />
+      </div>
+
+      <div class="text-center mb-6">
+        <button id="sqlInsertBtn" class="generate-btn">Generar SQL (Insert)</button>
+        <button id="downloadBtn" class="download-btn hidden">Descargar .sql</button>
+      </div>
+
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">3</span>SQL Editor</h2>
+        <textarea id="sqlQuery" class="sql-editor" placeholder="El código SQL generado aparecerá aquí..."></textarea>
+      </div>
+    </div>
+
+    <!-- Contenido SQL Formatter -->
+    <div id="contentSQLFormatter" class="tab-content">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Formatear SQL</h2>
+
+        <div class="formatter-controls">
+          <label>Lenguaje:
+            <select id="sqlLanguage" class="text-input" style="width:150px;">
+              <option value="sql" selected>SQL</option>
+              <option value="mysql">MySQL</option>
+              <option value="postgresql">PostgreSQL</option>
+              <option value="db2">DB2</option>
+              <option value="plsql">PL/SQL</option>
+              <option value="n1ql">N1QL</option>
+              <option value="hive">HiveQL</option>
+              <option value="mariadb">MariaDB</option>
+            </select>
+          </label>
+
+          <label>Case:
+            <select id="sqlCase" class="text-input" style="width:140px;">
+              <option value="upper" selected>UPPERCASE</option>
+              <option value="preserve">Conservar</option>
+              <option value="lower">lowercase (best-effort)</option>
+            </select>
+          </label>
+
+          <label>Indentación:
+            <input id="indentSize" type="number" value="2" min="0" max="8" class="text-input" style="width:84px;" />
+          </label>
+
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="formatterRemoveComments" /> Eliminar comentarios</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="formatterMinify" /> Minificar</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="autoFormatOnPaste" /> Auto-format al pegar</label>
+        </div>
+
+        <textarea id="formatterInput" class="sql-editor" placeholder="Escribe o pega tu SQL aquí..."></textarea>
+
+        <div class="flex justify-end mt-4 space-x-3">
+          <button id="formatBtn" class="generate-btn px-6 py-2">Formatear</button>
+          <button id="formatPerStmtBtn" class="generate-btn px-6 py-2" style="background:linear-gradient(135deg,#f59e0b,#d97706);">Formatear por sentencias</button>
+        </div>
+
+        <!-- Area de salida (solo lectura) -->
+        <div class="card" style="margin-top:18px;">
+          <h2 class="step-title"><span class="step-number">2</span>SQL Formateado</h2>
+          <textarea id="formatterOutput" class="sql-editor" placeholder="Aquí aparecerá el SQL formateado..." readonly></textarea>
+          <div class="flex justify-end mt-4 space-x-3">
+            <button id="copyOutputBtn" class="download-btn">Copiar</button>
+            <button id="downloadOutputBtn" class="download-btn">Descargar .sql</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- NUEVO: Contenido Optimizador SQL -->
+    <div id="contentSQLOptimizer" class="tab-content">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Optimizador de consultas SQL</h2>
+        <textarea id="sqlOptimizerInput" class="sql-editor" placeholder="Pegá tu consulta SQL aquí..."></textarea>
+        <div class="text-center mt-4">
+          <button id="optimizeBtn" class="generate-btn">Optimizar</button>
+        </div>
+        <div id="optimizerResult" class="mt-6 p-4 bg-gray-100 rounded-lg text-sm font-mono"></div>
+        <div id="optimizerFixed" class="mt-4 p-4 bg-green-100 rounded-lg text-sm font-mono"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Manejo de pestañas (3 pestañas)
+    const tabExcelSQL = document.getElementById('tabExcelSQL');
+    const tabSQLFormatter = document.getElementById('tabSQLFormatter');
+    const tabSQLOptimizer = document.getElementById('tabSQLOptimizer');
+
+    const contentExcelSQL = document.getElementById('contentExcelSQL');
+    const contentSQLFormatter = document.getElementById('contentSQLFormatter');
+    const contentSQLOptimizer = document.getElementById('contentSQLOptimizer');
+
+    function setActiveTab(tab, content) {
+      [tabExcelSQL, tabSQLFormatter, tabSQLOptimizer].forEach(t => {
+        t.classList.remove('tab-active'); t.classList.add('tab-inactive');
+      });
+      [contentExcelSQL, contentSQLFormatter, contentSQLOptimizer].forEach(c => c.classList.remove('tab-content-active'));
+      tab.classList.add('tab-active'); tab.classList.remove('tab-inactive');
+      content.classList.add('tab-content-active');
+    }
+
+    tabExcelSQL.addEventListener('click', () => setActiveTab(tabExcelSQL, contentExcelSQL));
+    tabSQLFormatter.addEventListener('click', () => setActiveTab(tabSQLFormatter, contentSQLFormatter));
+    tabSQLOptimizer.addEventListener('click', () => setActiveTab(tabSQLOptimizer, contentSQLOptimizer));
+
+    // ---------- Excel → SQL ----------
+    const excelFileInput = document.getElementById('excelFile');
+    const fileStatus = document.getElementById('fileStatus');
+    const tableNameInput = document.getElementById('tableName');
+    const sqlInsertBtn = document.getElementById('sqlInsertBtn');
+    const sqlQueryTextarea = document.getElementById('sqlQuery');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let excelData = [];
+
+    excelFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) { fileStatus.textContent = 'Seleccionar archivo | Ningún archivo seleccionado'; return; }
+      fileStatus.textContent = `Procesando: ${file.name}...`;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          excelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+          fileStatus.textContent = `✓ Archivo cargado: ${file.name} (${excelData.length} filas)`; fileStatus.style.color = '#48bb78';
+        } catch (error) {
+          fileStatus.textContent = '✗ Error al procesar el archivo'; fileStatus.style.color = '#e53e3e'; console.error('Error:', error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function generateSQLInsert(tableName, rows) {
+      if (!tableName) throw new Error("Debes ingresar un nombre de tabla.");
+      if (!rows.length) throw new Error("Debes cargar un archivo Excel.");
+      let sql = `-- Datos generados desde Excel\n-- Tabla: ${tableName}\n-- Filas: ${rows.length}\n\n`;
+      rows.forEach(row => {
+        const cols = Object.keys(row).map(col => `\`${col}\``).join(", ");
+        const vals = Object.values(row).map(v => v === null || v === undefined ? "NULL" : typeof v === 'number' ? v : `'${String(v).replace(/'/g, "''")}'`).join(", ");
+        sql += `INSERT INTO \`${tableName}\` (${cols}) VALUES (${vals});\n`;
+      });
+      return sql;
+    }
+
+    sqlInsertBtn.addEventListener('click', () => {
+      try {
+        const sql = generateSQLInsert(tableNameInput.value.trim(), excelData);
+        sqlQueryTextarea.value = sql;
+        downloadBtn.classList.remove("hidden");
+      } catch (err) { alert(err.message); }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const tableName = tableNameInput.value.trim() || 'consulta';
+      const blob = new Blob([sqlQueryTextarea.value], { type: "text/sql" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${tableName}.sql`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    });
+
+    tableNameInput.addEventListener('input', (e) => {
+      const cleanValue = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
+      if (e.target.value !== cleanValue) e.target.value = cleanValue;
+    });
+
+    // ---------- SQL Formatter (sin mostrar errores) ----------
+    const formatterInput = document.getElementById('formatterInput');
+    const formatterOutput = document.getElementById('formatterOutput');
+    const formatBtn = document.getElementById('formatBtn');
+    const formatPerStmtBtn = document.getElementById('formatPerStmtBtn');
+    const copyOutputBtn = document.getElementById('copyOutputBtn');
+    const downloadOutputBtn = document.getElementById('downloadOutputBtn');
+
+    const sqlLanguage = document.getElementById('sqlLanguage');
+    const sqlCase = document.getElementById('sqlCase');
+    const indentSize = document.getElementById('indentSize');
+    const removeCommentsChk = document.getElementById('formatterRemoveComments');
+    const minifyChk = document.getElementById('formatterMinify');
+    const autoFormatOnPaste = document.getElementById('autoFormatOnPaste');
+
+    const COMMON_SQL_KEYWORDS = [
+      'SELECT','FROM','WHERE','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL JOIN','JOIN','ON','GROUP BY','ORDER BY',
+      'INSERT','INTO','VALUES','UPDATE','SET','DELETE','CREATE','ALTER','DROP','TRUNCATE','UNION','ALL','DISTINCT','AS','AND','OR','NOT','IN','IS','NULL','LIKE','HAVING','LIMIT','OFFSET'
+    ];
+
+    // Safe check if library present
+    const hasLib = typeof sqlFormatter !== 'undefined' && sqlFormatter && typeof sqlFormatter.format === 'function';
+
+    // Simple fallback formatter (silencioso)
+    function simpleFormat(sql) {
+      if (!sql) return '';
+      let out = sql.replace(/\s+/g, ' ').trim();
+      // place newline after semicolons
+      out = out.replace(/;\s*/g, ';\n\n');
+      // add newline before common keywords
+      COMMON_SQL_KEYWORDS.forEach(k => {
+        const re = new RegExp('\\b' + k + '\\b', 'gi');
+        out = out.replace(re, '\n' + k.toUpperCase());
+      });
+      // tidy up multiple linebreaks
+      out = out.replace(/\n{3,}/g, '\n\n').trim();
+      return out;
+    }
+
+    // Split into statements respecting quotes/backticks (best-effort)
+    function splitStatements(sql) {
+      const parts = [];
+      let cur = '';
+      let sq = false, dq = false, bt = false;
+      for (let i = 0; i < sql.length; i++) {
+        const ch = sql[i];
+        if (ch === "'" && !dq && !bt) {
+          if (sql[i+1] === "'") { cur += "''"; i++; continue; }
+          sq = !sq; cur += ch; continue;
+        }
+        if (ch === '"' && !sq && !bt) { dq = !dq; cur += ch; continue; }
+        if (ch === '`' && !sq && !dq) { bt = !bt; cur += ch; continue; }
+        if (ch === ';' && !sq && !dq && !bt) {
+          parts.push(cur.trim());
+          cur = '';
+          continue;
+        }
+        cur += ch;
+      }
+      if (cur.trim()) parts.push(cur.trim());
+      return parts;
+    }
+
+    // Format each statement with lib or fallback
+    function tryFormatSafely(sql, opts) {
+      const statements = splitStatements(sql);
+      const outParts = [];
+      for (let i = 0; i < statements.length; i++) {
+        const stmt = statements[i];
+        if (!stmt) continue;
+        try {
+          if (hasLib) {
+            const formatted = sqlFormatter.format(stmt + (stmt.trim().endsWith(';') ? '' : ';'), opts);
+            outParts.push(formatted.trim());
+          } else {
+            outParts.push(simpleFormat(stmt));
+          }
+        } catch (e) {
+          // silent fallback: push either raw or simpleFormat
+          outParts.push(hasLib ? stmt : simpleFormat(stmt));
+        }
+      }
+      return outParts.join('\n\n');
+    }
+
+    function applyCase(formatted, caseOpt) {
+      if (!formatted) return '';
+      if (caseOpt === 'preserve') return formatted;
+      if (caseOpt === 'upper') return formatted; // sql-formatter configured to uppercase when possible
+      if (caseOpt === 'lower') {
+        COMMON_SQL_KEYWORDS.forEach(k => {
+          const re = new RegExp('\\b' + k + '\\b', 'g');
+          formatted = formatted.replace(re, k.toLowerCase());
+        });
+        return formatted;
+      }
+      return formatted;
+    }
+
+    function handleFormat(usePerStatement = false) {
+      let sql = formatterInput.value || '';
+      if (!sql.trim()) {
+        formatterOutput.value = '';
+        return;
+      }
+      // preprocess
+      if (removeCommentsChk.checked) {
+        sql = sql.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--.*$/gm, '');
+      }
+      if (minifyChk.checked) {
+        sql = sql.replace(/\s+/g, ' ').replace(/\s*;\s*/g, '; ').trim();
+      }
+      const lang = sqlLanguage.value || 'sql';
+      const caseOpt = sqlCase.value || 'upper';
+      const indentN = parseInt(indentSize.value, 10);
+      const indentStr = !isNaN(indentN) && indentN > 0 ? ' '.repeat(indentN) : ' ';
+
+      const opts = { language: lang, indent: indentStr, uppercase: caseOpt === 'upper' };
+
+      try {
+        let formatted;
+        if (!usePerStatement) {
+          if (hasLib) {
+            formatted = sqlFormatter.format(sql, opts);
+          } else {
+            formatted = simpleFormat(sql);
+          }
+        } else {
+          formatted = tryFormatSafely(sql, opts);
+        }
+        formatted = applyCase(formatted, caseOpt);
+        formatterOutput.value = formatted.trim();
+      } catch (err) {
+        // silent fallback: try per-statement or simple format
+        try {
+          const formatted = tryFormatSafely(sql, opts);
+          formatterOutput.value = applyCase(formatted, caseOpt);
+        } catch (e) {
+          // last-resort: simple formatting
+          formatterOutput.value = simpleFormat(sql);
+        }
+      }
+    }
+
+    formatBtn.addEventListener('click', () => handleFormat(false));
+    formatPerStmtBtn.addEventListener('click', () => handleFormat(true));
+
+    // Auto-format on paste (populates output)
+    formatterInput.addEventListener('paste', () => {
+      setTimeout(() => { if (autoFormatOnPaste.checked) handleFormat(false); }, 40);
+    });
+
+    // Copy and download act on output
+    copyOutputBtn.addEventListener('click', async () => {
+      const text = formatterOutput.value || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = formatterOutput;
+          ta.select();
+          document.execCommand('copy');
+        }
+        copyOutputBtn.textContent = '✓ Copiado';
+        setTimeout(() => (copyOutputBtn.textContent = 'Copiar'), 1400);
+      } catch (e) {
+        console.error('Copy failed', e);
+      }
+    });
+
+    downloadOutputBtn.addEventListener('click', () => {
+      const text = formatterOutput.value || formatterInput.value || '';
+      const blob = new Blob([text], { type: "text/sql" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'formatted.sql'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    });
+
+    // keep output cleared when input edited manually
+    formatterInput.addEventListener('input', () => {
+      // don't overwrite existing output while typing; leave it as-is until user clicks Format
+    });
+
+    // initialize
+    formatterOutput.value = '';
+
+    // ---------- Optimizador SQL ----------
+    const optimizeBtn = document.getElementById('optimizeBtn');
+    const sqlOptimizerInput = document.getElementById('sqlOptimizerInput');
+    const optimizerResult = document.getElementById('optimizerResult');
+    const optimizerFixed = document.getElementById('optimizerFixed');
+
+    optimizeBtn.addEventListener('click', optimizeSQL);
+
+    function optimizeSQL() {
+      const sql = (sqlOptimizerInput.value || '').trim();
+      const resultBox = optimizerResult;
+      const fixedBox = optimizerFixed;
+
+      if (!sql) {
+        resultBox.innerText = "⚠️ Pegá primero una consulta SQL.";
+        fixedBox.innerText = "";
+        return;
+      }
+
+      resultBox.innerText = "";
+      fixedBox.innerText = "";
+
+      // Regla 1: Evitar SELECT *
+      if (sql.toLowerCase().includes("select * from")) {
+        resultBox.innerText =
+          "🚀 Optimización sugerida:\n" +
+          "- Evitá usar SELECT * → especificá solo las columnas necesarias.\n" +
+          "- Agregá índices en columnas filtradas o usadas en JOINs.";
+
+        // Corrección automática (ejemplo)
+        let corrected = sql.replace(/select \*/i, "SELECT id, nombre, email");
+        fixedBox.innerText = "✅ Consulta optimizada:\n" + corrected;
+        return;
+      }
+
+      // Regla 2: Falta WHERE (consulta muy amplia)
+      if (sql.toLowerCase().startsWith("select") && !sql.toLowerCase().includes("where")) {
+        resultBox.innerText =
+          "⚠️ Tu consulta devuelve demasiados registros.\n" +
+          "Agregá un WHERE para limitar resultados.";
+
+        let corrected = sql + " WHERE condicion = 'valor'";
+        fixedBox.innerText = "✅ Consulta optimizada (ejemplo):\n" + corrected;
+        return;
+      }
+
+      // Regla 3: sugerencia general de índices para joins/where
+      if (/join\s+.+\s+on\s+/i.test(sql) || /where\s+/i.test(sql)) {
+        resultBox.innerText =
+          "💡 Sugerencias:\n" +
+          "- Revisá que las columnas usadas en JOIN y WHERE tengan índices.\n" +
+          "- Evitá funciones en columnas del WHERE (ej. WHERE YEAR(fecha) = 2023) porque impide usar índices.";
+        fixedBox.innerText = "";
+        return;
+      }
+
+      // Si no hay problemas detectados
+      resultBox.innerText = "✅ Consulta revisada. No se detectaron problemas comunes.";
+      fixedBox.innerText = "";
+    }
+
+  </script>
+</body>
+</html>
