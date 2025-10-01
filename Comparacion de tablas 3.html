@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Data Tool Box - Grupo EL LAGAR</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql-formatter@15.4.7/dist/sql-formatter.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Montserrat', sans-serif; background: #f0f2f5; min-height: 100vh; margin:0;}
+  .logo-hexagon { width: 70px; height: 70px; position: relative; margin: 0 auto; transform: rotate(0deg);}
+  .hexagon-part { position: absolute; width: 100%; height: 100%; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+  .hex-red { background: #E53E3E; z-index: 3; clip-path: polygon(50% 0%, 100% 25%, 50% 50%, 0% 25%); }
+  .hex-yellow { background: #FBD34D; z-index: 2; clip-path: polygon(100% 25%, 100% 75%, 50% 50%); }
+  .hex-gray { background: #9CA3AF; z-index: 1; clip-path: polygon(0% 25%, 50% 50%, 50% 100%, 0% 75%); }
+  .hex-light-gray { background: #CBD5E0; z-index: 1; clip-path: polygon(50% 50%, 100% 75%, 50% 100%); }
+  .hex-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: white; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); z-index: 4; }
+
+  .main-title { font-weight: 700; font-size: 3rem; color: #1a202c; text-align: center; margin: 3rem 0; letter-spacing: 3px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .subtitle { color: #718096; text-align: center; font-weight: 400; margin-bottom: 3rem; }
+  .brand-text { font-weight: 700; font-size: 0.9rem; color: #1a202c; }
+  .brand-text .el { color: #fbbf24; } .brand-text .lagar { color: #e53e3e; }
+
+  .card { background: white; border-radius: 20px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); padding: 2.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12); }
+
+  .step-number { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; margin-right: 12px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+  .step-title { color: #2d3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; }
+
+  .file-input { position: relative; display: inline-block; cursor: pointer; width: 100%; }
+  .file-input input[type=file] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  .file-input-label { display: block; padding: 24px 16px; border: 3px dashed #cbd5e0; border-radius: 16px; text-align: center; transition: all 0.3s ease; background: #f8fafc; cursor: pointer; }
+  .file-input:hover .file-input-label { border-color: #667eea; background: #eef2ff; transform: translateY(-1px); }
+
+  .generate-btn { background: linear-gradient(135deg, #4299e1 0%, #667eea 100%); color: white; padding: 16px 48px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+  .generate-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4); }
+
+  .download-btn { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 10px 24px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3); margin-left: 1rem; }
+  .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4); }
+
+  .text-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: all 0.3s ease; }
+  .text-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+  .sql-editor { width: 100%; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 16px; line-height: 1.5; resize: vertical; min-height: 250px; background: #f8fafc; }
+  .sql-editor:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 2rem; cursor: pointer; justify-content: center; flex-wrap: wrap; }
+  .tab { padding: 12px 24px; border-radius: 12px; font-weight: 600; }
+  .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+  .tab-inactive { background: #e2e8f0; color: #2d3748; }
+  .tab:hover { opacity: 0.85; }
+  .tab-content { display: none; }
+  .tab-content-active { display: block; }
+
+  /* Bienvenida pantalla completa */
+  #welcomeScreen { position: fixed; top:0; left:0; width:100%; height:100%; background:#f8fafc; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; transition: opacity 0.5s ease;}
+  #welcomeScreen.hidden { opacity:0; visibility:hidden;}
+</style>
+</head>
+<body>
+
+<!-- Pantalla de Bienvenida -->
+<div id="welcomeScreen">
+  <div class="logo-hexagon mb-8">
+    <div class="hexagon-part hex-red"></div>
+    <div class="hexagon-part hex-yellow"></div>
+    <div class="hexagon-part hex-gray"></div>
+    <div class="hexagon-part hex-light-gray"></div>
+    <div class="hex-center"></div>
+  </div>
+  <h1 class="main-title">DATA TOOL BOX</h1>
+  <p class="subtitle mb-8">Herramienta todo en uno para SQL y Excel</p>
+  <button id="enterBtn" class="generate-btn px-10 py-4 text-xl">Entrar</button>
+</div>
+
+<!-- Interfaz principal -->
+<header class="py-6" id="mainInterface" style="display:none;">
+  <div class="max-w-4xl mx-auto px-4 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <div class="logo-hexagon">
+        <div class="hexagon-part hex-red"></div>
+        <div class="hexagon-part hex-yellow"></div>
+        <div class="hexagon-part hex-gray"></div>
+        <div class="hexagon-part hex-light-gray"></div>
+        <div class="hex-center"></div>
+      </div>
+      <div class="brand-text">GRUPO <span class="el">EL</span> <span class="lagar">LAGAR</span></div>
+    </div>
+    <div class="subtitle">TODO EN UN MISMO LUGAR</div>
+  </div>
+</header>
+
+<div id="tabsContainer" style="display:none;">
+  <div class="tabs">
+    <div id="tabExcelSQL" class="tab tab-active">Excel → SQL</div>
+    <div id="tabSQLFormatter" class="tab tab-inactive">SQL Formatter</div>
+    <div id="tabSQLOptimizer" class="tab tab-inactive">Optimizador SQL</div>
+    <div id="tabINClause" class="tab tab-inactive">Lista → IN</div>
+    <div id="tabCompareColumns" class="tab tab-inactive">Comparador de Columnas</div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 pb-8">
+    <!-- Aquí van todas las pestañas completas, copiando tu código anterior -->
+    <!-- Excel → SQL -->
+    <div id="contentExcelSQL" class="tab-content tab-content-active">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Cargar archivo Excel</h2>
+        <div class="file-input">
+          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+          <label for="excelFile" class="file-input-label">
+            <div class="text-gray-600">
+              <span id="fileStatus">Seleccionar archivo | Ningún archivo seleccionado</span>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">2</span>Nombre de la tabla</h2>
+        <input type="text" id="tableName" placeholder="Ej: usuarios" class="text-input" />
+      </div>
+      <div class="text-center mb-6">
+        <button id="sqlInsertBtn" class="generate-btn">Generar SQL (Insert)</button>
+        <button id="downloadBtn" class="download-btn hidden">Descargar .sql</button>
+      </div>
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">3</span>SQL Editor</h2>
+        <textarea id="sqlQuery" class="sql-editor" placeholder="El código SQL generado aparecerá aquí..."></textarea>
+      </div>
+    </div>
+
+    <!-- SQL Formatter -->
+    <div id="contentSQLFormatter" class="tab-content">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Formatear SQL</h2>
+        <div class="formatter-controls">
+          <label>Lenguaje:
+            <select id="sqlLanguage" class="text-input" style="width:150px;">
+              <option value="sql" selected>SQL</option>
+              <option value="mysql">MySQL</option>
+              <option value="postgresql">PostgreSQL</option>
+              <option value="db2">DB2</option>
+              <option value="plsql">PL/SQL</option>
+              <option value="n1ql">N1QL</option>
+              <option value="hive">HiveQL</option>
+              <option value="mariadb">MariaDB</option>
+            </select>
+          </label>
+          <label>Case:
+            <select id="sqlCase" class="text-input" style="width:140px;">
+              <option value="upper" selected>UPPERCASE</option>
+              <option value="preserve">Conservar</option>
+              <option value="lower">lowercase (best-effort)</option>
+            </select>
+          </label>
+          <label>Indentación:
+            <input id="indentSize" type="number" value="2" min="0" max="8" class="text-input" style="width:84px;" />
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="formatterRemoveComments" /> Eliminar comentarios</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="formatterMinify" /> Minificar</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="autoFormatOnPaste" /> Auto-format al pegar</label>
+        </div>
+        <textarea id="formatterInput" class="sql-editor" placeholder="Escribe o pega tu SQL aquí..."></textarea>
+        <div class="flex justify-end mt-4 space-x-3">
+          <button id="formatBtn" class="generate-btn px-6 py-2">Formatear</button>
+          <button id="formatPerStmtBtn" class="generate-btn px-6 py-2" style="background:linear-gradient(135deg,#f59e0b,#d97706);">Formatear por sentencias</button>
+        </div>
+        <div class="card" style="margin-top:18px;">
+          <h2 class="step-title"><span class="step-number">2</span>SQL Formateado</h2>
+          <textarea id="formatterOutput" class="sql-editor" placeholder="El SQL formateado aparecerá aquí..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optimizador SQL -->
+    <div id="contentSQLOptimizer" class="tab-content">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Optimizar SQL</h2>
+        <textarea id="optimizerInput" class="sql-editor" placeholder="Pega tu SQL aquí..."></textarea>
+        <div class="flex justify-end mt-4">
+          <button id="optimizerBtn" class="generate-btn">Optimizar</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">2</span>Resultado Optimizado</h2>
+        <textarea id="optimizerOutput" class="sql-editor" placeholder="El SQL optimizado aparecerá aquí..."></textarea>
+      </div>
+    </div>
+
+    <!-- Lista → IN -->
+    <div id="contentINClause" class="tab-content">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Convertir lista a cláusula IN</h2>
+        <textarea id="listInput" class="sql-editor" placeholder="Escribe tu lista, separados por coma, espacio o salto de línea..."></textarea>
+        <div class="text-center mt-4">
+          <button id="generateInBtn" class="generate-btn">Generar IN</button>
+        </div>
+        <div class="card mt-4">
+          <h2 class="step-title"><span class="step-number">2</span>Resultado</h2>
+          <textarea id="inOutput" class="sql-editor" placeholder="La cláusula IN aparecerá aquí..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparador de Columnas -->
+    <div id="contentCompareColumns" class="tab-content">
+      <div class="card">
+        <h2 class="step-title"><span class="step-number">1</span>Comparar Columnas</h2>
+        <textarea id="colA" class="sql-editor" placeholder="Columnas A"></textarea>
+        <textarea id="colB" class="sql-editor mt-2" placeholder="Columnas B"></textarea>
+        <div class="text-center mt-4">
+          <button id="compareColsBtn" class="generate-btn">Comparar</button>
+        </div>
+        <div class="card mt-4">
+          <h2 class="step-title"><span class="step-number">2</span>Resultado</h2>
+          <textarea id="compareOutput" class="sql-editor" placeholder="El resultado de la comparación aparecerá aquí..."></textarea>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Mostrar pantalla principal al dar entrar
+  document.getElementById('enterBtn').addEventListener('click', ()=>{
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    setTimeout(()=>{
+      document.getElementById('welcomeScreen').style.display='none';
+      document.getElementById('mainInterface').style.display='block';
+      document.getElementById('tabsContainer').style.display='block';
+    },500);
+  });
+
+  // Tabs
+  const tabs = document.querySelectorAll('.tab');
+  const contents = document.querySelectorAll('.tab-content');
+  tabs.forEach((tab,i)=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.replace('tab-active','tab-inactive'));
+      tab.classList.replace('tab-inactive','tab-active');
+      contents.forEach(c=>c.classList.remove('tab-content-active'));
+      contents[i].classList.add('tab-content-active');
+    });
+  });
+
+  /* === Excel → SQL === */
+  const excelFile = document.getElementById('excelFile');
+  const fileStatus = document.getElementById('fileStatus');
+  const sqlInsertBtn = document.getElementById('sqlInsertBtn');
+  const tableName = document.getElementById('tableName');
+  const sqlQuery = document.getElementById('sqlQuery');
+  const downloadBtn = document.getElementById('downloadBtn');
+  let excelData = [];
+
+  excelFile.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    fileStatus.textContent = file ? file.name : "Ningún archivo seleccionado";
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt)=>{
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, {type:'array'});
+      const sheetName = workbook.SheetNames[0];
+      excelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval:null});
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  sqlInsertBtn.addEventListener('click', ()=>{
+    if(!tableName.value) return alert("Escribe el nombre de la tabla");
+    if(!excelData.length) return alert("Carga un archivo Excel primero");
+    let sql = `INSERT INTO ${tableName.value} (${Object.keys(excelData[0]).join(", ")}) VALUES\n`;
+    sql += excelData.map(row=>{
+      const vals = Object.values(row).map(v=> v===null?'NULL': `'${v.toString().replace(/'/g,"''")}'`);
+      return `(${vals.join(", ")})`;
+    }).join(",\n") + ";";
+    sqlQuery.value = sql;
+    downloadBtn.classList.remove('hidden');
+  });
+
+  downloadBtn.addEventListener('click', ()=>{
+    const blob = new Blob([sqlQuery.value], {type:"text/sql"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url;
+    a.download = "insert.sql";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  /* === SQL Formatter === */
+  const formatBtn = document.getElementById('formatBtn');
+  const formatterInput = document.getElementById('formatterInput');
+  const formatterOutput = document.getElementById('formatterOutput');
+  formatBtn.addEventListener('click', ()=>{
+    const language = document.getElementById('sqlLanguage').value;
+    const indent = parseInt(document.getElementById('indentSize').value)||2;
+    const removeComments = document.getElementById('formatterRemoveComments').checked;
+    const minify = document.getElementById('formatterMinify').checked;
+    try {
+      let formatted = sqlFormatter.format(formatterInput.value, {language, indent, uppercase:true});
+      if(removeComments) formatted = formatted.replace(/--.*$/mg,"").replace(/\/\*[\s\S]*?\*\//g,"");
+      if(minify) formatted = formatted.replace(/\s+/g," ").trim();
+      formatterOutput.value = formatted;
+    } catch(e){ alert(e); }
+  });
+
+  /* === Optimizador SQL (solo ejemplo simplificado) === */
+  const optimizerBtn = document.getElementById('optimizerBtn');
+  const optimizerInput = document.getElementById('optimizerInput');
+  const optimizerOutput = document.getElementById('optimizerOutput');
+  optimizerBtn.addEventListener('click', ()=>{
+    optimizerOutput.value = optimizerInput.value.replace(/\s+/g,' ').trim();
+  });
+
+  /* === Lista → IN === */
+  const generateInBtn = document.getElementById('generateInBtn');
+  const listInput = document.getElementById('listInput');
+  const inOutput = document.getElementById('inOutput');
+  generateInBtn.addEventListener('click', ()=>{
+    const items = listInput.value.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean);
+    const formatted = "('" + items.join("','") + "')";
+    inOutput.value = formatted;
+  });
+
+  /* === Comparador de Columnas === */
+  const compareColsBtn = document.getElementById('compareColsBtn');
+  const colA = document.getElementById('colA');
+  const colB = document.getElementById('colB');
+  const compareOutput = document.getElementById('compareOutput');
+  compareColsBtn.addEventListener('click', ()=>{
+    const setA = new Set(colA.value.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean));
+    const setB = new Set(colB.value.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean));
+    const onlyA = [...setA].filter(x=>!setB.has(x));
+    const onlyB = [...setB].filter(x=>!setA.has(x));
+    compareOutput.value = `Solo en A:\n${onlyA.join("\n")}\n\nSolo en B:\n${onlyB.join("\n")}`;
+  });
+
+</script>
+</body>
+</html>
